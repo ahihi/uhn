@@ -1,9 +1,8 @@
 extern crate uhn;
 
-use uhn::piece;
-
 fn main() {
-    println!("   ~~\n");
+    
+    println!("     ~~\n");
     for piece_name in uhn::piece::Name::all() {
         let mut piece = piece_name.to_piece();
      
@@ -12,6 +11,17 @@ fn main() {
             piece.rot(true);
         }
 
-        println!("   ~~\n");
+        println!("     ~~\n");
+    }
+    
+
+    for piece_name in uhn::piece::Name::all() {
+        let mut piece = piece_name.to_piece();
+        let mut well = uhn::well::Well::new();
+
+        let spawn_pos = well.get_spawn_pos(&piece);
+
+        well.imprint(spawn_pos, &piece);
+        println!("{}", well.draw());
     }
 }

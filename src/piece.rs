@@ -1,3 +1,5 @@
+use ::pos::Pos;
+
 #[derive(Debug)]
 pub enum Name { O, S, Z, J, L, T, I }
 
@@ -36,9 +38,9 @@ impl Name {
         };
 
         for &tile in tiles.iter() {
-            let x = tile % MAP_SIZE;
-            let y = tile / MAP_SIZE;
-            map.set(Pos::new(x, y), true);
+            let x = tile % PIECE_SIZE;
+            let y = tile / PIECE_SIZE;
+            map.set(Pos::new(x as isize, y as isize), true);
         }
 
         Piece::new(map, &offsets)
@@ -49,20 +51,8 @@ impl Name {
     }
 }
 
-const MAP_SIZE: usize = 4;
-type Grid = [[bool; MAP_SIZE]; MAP_SIZE];
-
-#[derive(Clone, Copy, Debug)]
-pub struct Pos {
-    pub x: usize,
-    pub y: usize
-}
-
-impl Pos {
-    pub fn new(x: usize, y: usize) -> Self {
-        Pos { x: x, y: y }
-    }
-}
+pub const PIECE_SIZE: usize = 4;
+type Grid = [[bool; PIECE_SIZE]; PIECE_SIZE];
 
 #[derive(Clone, Copy, Debug)]
 pub struct Map {
@@ -71,29 +61,29 @@ pub struct Map {
 
 impl Map {
     pub fn new() -> Self {
-        Map { grid: [[false; MAP_SIZE]; MAP_SIZE] }
+        Map { grid: [[false; PIECE_SIZE]; PIECE_SIZE] }
     }
 
     pub fn in_bounds(&self, pos: Pos) -> bool {
-        pos.x < MAP_SIZE && pos.y < MAP_SIZE
+        0 <= pos.x && pos.x < PIECE_SIZE as isize && 0 <= pos.y && pos.y < PIECE_SIZE as isize
     }
     
     pub fn get(&self, pos: Pos) -> bool {
-        self.in_bounds(pos) && self.grid[pos.y][pos.x]
+        self.in_bounds(pos) && self.grid[pos.y as usize][pos.x as usize]
     }
 
     pub fn set(&mut self, pos: Pos, value: bool) {
         if self.in_bounds(pos) {
-            self.grid[pos.y][pos.x] = value;
+            self.grid[pos.y as usize][pos.x as usize] = value;
         }
     }
         
     pub fn ccw(&self) -> Self {
         let mut new_map = Map::new();
-        for y in 0..MAP_SIZE {
-            for x in 0..MAP_SIZE {
+        for y in 0..PIECE_SIZE as isize {
+            for x in 0..PIECE_SIZE as isize {
                 let pos = Pos::new(x, y);
-                let pos0 = Pos::new(MAP_SIZE - 1 - y, x);
+                let pos0 = Pos::new(PIECE_SIZE as isize - 1 - y, x);
                 new_map.set(pos, self.get(pos0));
             }
         }
@@ -103,14 +93,11 @@ impl Map {
 
     pub fn trans(&self, offset: [isize; 2]) -> Self {
         let mut new_map = Map::new();
-        for y in 0..MAP_SIZE {
-            for x in 0..MAP_SIZE {
-                let x0 = x as isize - offset[0];
-                let y0 = y as isize - offset[1];
-                let value = 0 <= x0 && 0 <= y0 &&
-                    self.get(Pos::new(x0 as usize, y0 as usize));
-
-                new_map.set(Pos::new(x, y), value);
+        for y in 0..PIECE_SIZE as isize {
+            for x in 0..PIECE_SIZE as isize {
+                let pos = Pos::new(x, y);
+                let pos0 = Pos::new(x - offset[0], y - offset[1]);
+                new_map.set(pos, self.get(pos0));
             }
         }
 
@@ -119,9 +106,9 @@ impl Map {
     
     pub fn draw(&self) -> String {
         let mut str = String::new();
-        for y in 0..MAP_SIZE {
-            for x in 0..MAP_SIZE {
-                let tile = if self.get(Pos::new(x, y)) { "[]" } else { "--" };
+        for y in 0..PIECE_SIZE as isize {
+            for x in 0..PIECE_SIZE as isize {
+                let tile = if self.get(Pos::new(x, y)) { "[ ]" } else { " . " };
                 str.push_str(tile);
             }
             str.push('\n');
@@ -155,6 +142,10 @@ impl Piece {
     
     pub fn get_map(&self) -> &Map {
         &self.maps[self.rot]
+    }
+
+    pub fn get(&self, pos: Pos) -> bool {
+        self.get_map().get(pos)
     }
     
     pub fn rot(&mut self, ccw: bool) {
