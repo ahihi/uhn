@@ -1,0 +1,14 @@
+[package]
+name = "uhn"
+version = "0.1.0"
+authors = ["Miranda Kastemaa <miranda@foldplop.com>"]
+
+[lib]
+name = "uhn"
+path = "src/lib.rs"
+
+[[bin]]
+name = "uhn-exe"
+path = "src/main.rs"
+
+[dependencies]
